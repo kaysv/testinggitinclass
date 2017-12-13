@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block customcss %}
+  <link rel="stylesheet" href="{% static 'login/css/loginreg.css' %}">
+  <link rel="stylesheet" href="{% static 'login/css/slider.css' %}">
+  <link rel="stylesheet" href="{% static 'login/css/snackbar.css' %}">
+  <link rel="stylesheet" href="{% static 'login/css/animating-glyph.css' %}">
+{% endblock%}
+
+{% block content %}
+
+  <nav  class="w3-container w3-teal w3-center w3-margin-bottom">
+  <p style="font-size:50px;">eCV</p>
+  {% if user.is_authenticated %}
+    <p><a href="/edit/" class="text-center" style="color:white;font-size:20px;"><span class="glyphicon glyphicon-edit"></span></a></p>
+  {% endif %}
+  </nav>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="input-group" style="margin-bottom:10px;">
+          <input id="search-for-input" type="text" class="form-control" placeholder="Search for...">
+          <span class="input-group-btn">
+            <button id="search-for-button" class="btn btn-default" type="button">Go!</button>
+          </span>
+        </div><!-- /input-group -->
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        <div class="panel panel-login">
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-xs-6">
+                <a href="#" class="active" id="login-form-link">Login</a>
+              </div>
+              <div class="col-xs-6">
+                <a href="#" id="register-form-link">Register</a>
+              </div>
+            </div>
+            <hr>
+          </div>
+
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-lg-12">
+                <form id="login-form" method="post" role="form" style="display: block;">
+                  {% csrf_token %}
+                  <div class="form-group">
+                    <input type="text" name="username" id="username" tabindex="1" class="form-control to-lower" placeholder="Username" value="">
+                  </div>
+                  <div class="form-group">
+                    <input type="password" name="password" id="password" tabindex="2" class="form-control" placeholder="Password">
+                  </div>
+                  <div class="form-group">
+                    <div class="row">
+                      <div class="col-sm-6 col-sm-offset-3">
+                        <!-- <input type="submit" name="Login" id="login-submit" tabindex="4" class="form-control btn btn-login" value="Log In"> -->
+                        <input name="Login" value="Sign In" hidden>
+                        <button id="login-submit" tabindex="4" class="form-control btn btn-login" value="Log In" >Login</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="row">
+                      <div class="col-lg-12">
+                        <div class="text-center">
+                          <a id="forgot-password" href="" tabindex="5" class="forgot-password">Forgot Password?</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extrajs %}
+<!-- Latest compiled and minified JavaScript -->
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="{% static 'login/js/loginreg.js' %}" type="text/javascript"></script>
+<script src="{% static 'login/js/ajaxlogin.js' %}" type="text/javascript"></script>
+<script src="{% static 'login/js/snackbar.js' %}" type="text/javascript"></script>
+<script src="{% static 'login/js/ajaxreg.js' %}" type="text/javascript"></script>
+
+<script type="text/javascript">
+  //Validating username
+  var username_valid = false;
+  var email_valid = false;
+  var password1_valid = false;
+  var password2_valid = false;
+  $("#register-form")[0].reset();
+  $("#id_username").change(function(){
+        $("#register-submit").css("pointer-events","none");
+        var filter = /^[A-z]+$/;
+        if(!($(this).val().length>2 && filter.test($(this).val()))){
+          valid=false;
+          $("#usernameError").html("<span id='wrongUsername' style='color:red' class='pull-right glyphicon glyphicon-info-sign'></span><br>")
+        }else{
+          $("#usernameError").html("<span id='spanusernameProcess' class='pull-right glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><br>")
+          var formData=new FormData();
+          formData.append('username',$(this).val())
+          formData.append('type','check_user_exist');
+          formData.append('csrfmiddlewaretoken','{{ csrf_token }}');
+          $.ajax({
+            type:"POST",
+            url:"/",
+            data:formData,
+            processData:false,
+            contentType:false,
+            success:function(result){
+              if(result=="exists"){
+                $("#usernameError").html("<span id='spanusernameError' style='color:red' class='pull-right glyphicon glyphicon-info-sign'></span><br>");
+                username_valid=false;
+              }else if (result=="notexists") {
+                $("#usernameError").html("<span id='spanusernameSuccess' style='color:green' class='pull-right glyphicon glyphicon-ok-sign'></span><br>");
+                $("#register-submit").css("pointer-events","auto");
+                username_valid=true;
+              }else {
+                $("#usernameError").html("<span id='spanusernameServerError' style='color:orange' class='pull-right glyphicon glyphicon-info-sign'></span><br>");
+                username_valid=false;
+              }
+            },
+            error:function(result){
+              $("#usernameError").html("<span id='spanusernameServerError' style='color:orange' class='pull-right glyphicon glyphicon-info-sign'></span><br>");
+              username_valid=false;
+            }
+          });
+      };
+  });
+</script>
+
+{% endblock %}
